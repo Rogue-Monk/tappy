@@ -38,7 +38,7 @@ const BubbleMenu = ({ editor }: Props) => {
   return (
     <TiptapBubbleMenu
       editor={editor}
-      className="flex items-center gap-1 p-1 bg-white/90 dark:bg-[#0a0a0a] backdrop-blur-md border border-gray-200 dark:border-gray-800 rounded-lg shadow-xl shadow-black/10"
+      className="flex items-center gap-1 p-1 bg-white/20 dark:bg-black/20 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-lg shadow-xl shadow-black/10"
     >
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleBold().run()}

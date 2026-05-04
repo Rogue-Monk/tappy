@@ -65,10 +65,10 @@ const Toolbar = ({ editor, isPopup }: Props) => {
   return (
     <div 
       className={cn(
-        "flex flex-wrap gap-1 p-2 bg-white/80 dark:bg-[#0a0a0a] backdrop-blur-md z-10",
+        "flex flex-wrap gap-1 p-2 bg-white/20 dark:bg-black/20 backdrop-blur-xl z-10",
         isPopup 
-          ? "border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl shadow-black/20 max-w-[320px] sm:max-w-[400px] justify-center" 
-          : "border-b border-gray-200 dark:border-gray-800 sticky top-0 rounded-t-2xl"
+          ? "border border-white/20 dark:border-white/10 rounded-2xl shadow-xl shadow-black/20 max-w-[320px] sm:max-w-[400px] justify-center" 
+          : "border-b border-white/20 dark:border-white/10 sticky top-0 rounded-t-2xl"
       )}
     >
       <ToolbarButton
