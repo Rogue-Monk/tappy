@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tappy Editor
 
-## Getting Started
+Tappy is a premium, high-performance, and standalone rich-text editor component built with React, Tiptap, Tailwind CSS, and Framer Motion. It features smooth animations, a configurable toolbar, and a focus on portability for seamless integration into other web applications.
 
-First, run the development server:
+## Installation
+
+You can install Tappy into your own project via npm (once published or linked):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install tappy
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tappy requires the following peer dependencies:
+- `react`
+- `react-dom`
+- `framer-motion`
+- `lucide-react`
+- `@tiptap/*` packages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Usage
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Import the editor and its required CSS into your project:
 
-## Learn More
+```tsx
+import { useState } from "react";
+import { TappyEditor } from "tappy";
+import "tappy/style.css"; // Required for Tailwind styles
 
-To learn more about Next.js, take a look at the following resources:
+export default function MyEditorPage() {
+  const [content, setContent] = useState("");
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  return (
+    <div className="max-w-3xl mx-auto p-10">
+      <TappyEditor 
+        value={content} 
+        onChange={setContent} 
+      />
+    </div>
+  );
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Development
 
-## Deploy on Vercel
+Tappy includes a Next.js playground for local development.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. Run the Next.js development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Build the standalone library:
+   ```bash
+   npm run build
+   ```
+   This will generate the `dist/` directory containing the bundled JS and CSS.

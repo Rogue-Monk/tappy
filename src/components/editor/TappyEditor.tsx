@@ -1,11 +1,8 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import Toolbar from "./Toolbar";
-import BubbleMenu from "./BubbleMenu";
 import { defaultExtensions } from "./Extensions";
-import { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export interface TappyEditorProps {
@@ -37,10 +34,6 @@ export const TappyEditor = ({
     },
   });
 
-  const [popupMenu, setPopupMenu] = useState<{ x: number; y: number } | null>(
-    null,
-  );
-  const popupRef = useRef<HTMLDivElement>(null);
   const [characterCount, setCharacterCount] = useState(0);
 
   useEffect(() => {
@@ -49,19 +42,7 @@ export const TappyEditor = ({
     }
   }, [editor, value]);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
-        setPopupMenu(null);
-      }
-    };
-    if (popupMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [popupMenu]);
+
 
   // Sync external value changes if they differ from current content
   useEffect(() => {
@@ -93,8 +74,6 @@ export const TappyEditor = ({
         className,
       )}
     >
-      {!readOnly && <Toolbar editor={editor} />}
-      {!readOnly && <BubbleMenu editor={editor} />}
       <div
         className="flex-grow p-4 sm:p-6 text-base leading-relaxed text-gray-900 dark:text-gray-100 relative"
         onClick={() => {
@@ -102,39 +81,8 @@ export const TappyEditor = ({
             editor?.commands.focus("end");
           }
         }}
-        onDoubleClick={(e) => {
-          if (readOnly) return;
-          const rect = e.currentTarget.getBoundingClientRect();
-          setPopupMenu({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-          });
-        }}
       >
         <EditorContent editor={editor} className="h-full" />
-
-        <AnimatePresence>
-          {popupMenu && (
-            <motion.div
-              ref={popupRef}
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.15 }}
-              style={{
-                position: "absolute",
-                left: popupMenu.x,
-                top: popupMenu.y,
-                transform: "translate(-50%, -100%)",
-                zIndex: 50,
-                marginTop: "-10px",
-              }}
-              onDoubleClick={(e) => e.stopPropagation()}
-            >
-              <Toolbar editor={editor} isPopup={true} />
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div className="absolute bottom-4 right-4 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 font-medium bg-white/30 dark:bg-black/30 backdrop-blur-md px-2 py-1 rounded-full border border-white/20 dark:border-white/10 shadow-sm">
           <span>{characterCount} / {characterLimit}</span>
