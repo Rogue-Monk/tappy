@@ -3,6 +3,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import CharacterCount from "@tiptap/extension-character-count";
+import { VideoEmbed } from "./extensions/VideoEmbed";
+
 export const defaultExtensions = [
   StarterKit.configure({
     heading: {
@@ -31,4 +33,5 @@ export const defaultExtensions = [
     },
   }),
   CharacterCount.configure({ limit: 350 }),
+  VideoEmbed,
 ];
