@@ -3,7 +3,8 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import CharacterCount from "@tiptap/extension-character-count";
-import { VideoEmbed } from "./extensions/VideoEmbed";
+import { SmartEmbed } from "./extensions/SmartEmbed";
+import { SlashCommand } from "./extensions/SlashCommand";
 
 export const defaultExtensions = [
   StarterKit.configure({
@@ -29,9 +30,11 @@ export const defaultExtensions = [
   }),
   Image.configure({
     HTMLAttributes: {
-      class: "rounded-lg max-w-full h-auto shadow-md border border-gray-200 dark:border-gray-800",
+      class:
+        "rounded-lg max-w-full h-auto shadow-md border border-gray-200 dark:border-gray-800",
     },
   }),
-  CharacterCount.configure({ limit: 350 }),
-  VideoEmbed,
+  CharacterCount.configure({ limit: 300 }),
+  SmartEmbed,
+  SlashCommand,
 ];

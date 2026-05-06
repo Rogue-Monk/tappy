@@ -2700,12 +2700,6 @@ var Mark = class _Mark extends Extendable {
 function isNumber(value) {
   return typeof value === "number";
 }
-var PasteRule = class {
-  constructor(config) {
-    this.find = config.find;
-    this.handler = config.handler;
-  }
-};
 var pasteRuleMatcherHandler = (text, find, event) => {
   if (isRegExp(find)) {
     return [...text.matchAll(find)];
@@ -4170,32 +4164,14 @@ var Node3 = class _Node extends Extendable {
     return super.extend(resolvedConfig);
   }
 };
-function nodePasteRule(config) {
-  return new PasteRule({
-    find: config.find,
-    handler({ match, chain, range, pasteEvent }) {
-      const attributes = callOrReturn(config.getAttributes, void 0, match, pasteEvent);
-      const content = callOrReturn(config.getContent, void 0, attributes);
-      if (attributes === false || attributes === null) {
-        return null;
-      }
-      const node = { type: config.type.name, attrs: attributes };
-      if (content) {
-        node.content = content;
-      }
-      if (match.input) {
-        chain().deleteRange(range).insertContentAt(range.from, node);
-      }
-    }
-  });
-}
 
-// src/components/editor/extensions/VideoEmbed.tsx
+// src/components/editor/extensions/SmartEmbed.ts
+import { Plugin as Plugin11, PluginKey as PluginKey9 } from "@tiptap/pm/state";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 
 // src/components/editor/components/EmbedWrapper.tsx
 import { NodeViewWrapper } from "@tiptap/react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2, Link2 } from "lucide-react";
 
 // src/lib/utils.ts
 import { clsx } from "clsx";
@@ -4205,10 +4181,86 @@ function cn(...inputs) {
 }
 
 // src/components/editor/components/EmbedWrapper.tsx
+import { useState } from "react";
+
+// src/components/editor/components/PreviewCard.tsx
+import { ExternalLink } from "lucide-react";
 import { jsx, jsxs } from "react/jsx-runtime";
+var PreviewCard = ({ url, metadata }) => {
+  const { title, description, image, site_name } = metadata || {};
+  return /* @__PURE__ */ jsx(
+    "a",
+    {
+      href: url,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      className: "block no-underline",
+      contentEditable: false,
+      children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200 my-4 max-w-2xl bg-white dark:bg-black/40", children: [
+        image && /* @__PURE__ */ jsx("div", { className: "w-full sm:w-48 h-48 sm:h-auto flex-shrink-0 bg-gray-100 dark:bg-gray-800 relative", children: /* @__PURE__ */ jsx(
+          "img",
+          {
+            src: image,
+            alt: title || "Link preview",
+            className: "absolute inset-0 w-full h-full object-cover"
+          }
+        ) }),
+        /* @__PURE__ */ jsxs("div", { className: "p-4 flex flex-col justify-center flex-grow overflow-hidden", children: [
+          site_name && /* @__PURE__ */ jsx("div", { className: "text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider", children: site_name }),
+          /* @__PURE__ */ jsx("h3", { className: "text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 line-clamp-2 mb-1", children: title || url }),
+          description && /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3", children: description }),
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center text-xs text-blue-500 font-medium mt-auto break-all", children: [
+            /* @__PURE__ */ jsx(ExternalLink, { className: "w-3 h-3 mr-1 flex-shrink-0" }),
+            /* @__PURE__ */ jsx("span", { className: "truncate", children: url })
+          ] })
+        ] })
+      ] })
+    }
+  );
+};
+
+// src/components/editor/components/EmbedWrapper.tsx
+import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
 var EmbedWrapper = (props) => {
   const { node, selected, deleteNode: deleteNode2 } = props;
-  const { src, platform } = node.attrs;
+  const { src, platform, embedType, originalUrl, metadata, isLoading } = node.attrs;
+  const [isIframeLoading, setIsIframeLoading] = useState(true);
+  if (isLoading) {
+    return /* @__PURE__ */ jsx2(NodeViewWrapper, { className: "my-6", children: /* @__PURE__ */ jsxs2("div", { className: "w-full flex items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-800", children: [
+      /* @__PURE__ */ jsx2(Loader2, { className: "w-5 h-5 text-blue-500 animate-spin mr-3" }),
+      /* @__PURE__ */ jsxs2("span", { className: "text-sm text-gray-500 dark:text-gray-400", children: [
+        "Loading embed for ",
+        originalUrl,
+        "..."
+      ] })
+    ] }) });
+  }
+  if (embedType === "error") {
+    return /* @__PURE__ */ jsx2(NodeViewWrapper, { className: "my-6", children: /* @__PURE__ */ jsxs2("div", { className: "w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-900/30", children: [
+      /* @__PURE__ */ jsxs2("div", { className: "flex items-center", children: [
+        /* @__PURE__ */ jsx2(Link2, { className: "w-5 h-5 mr-3" }),
+        /* @__PURE__ */ jsxs2("span", { className: "text-sm font-medium", children: [
+          "Failed to load embed: ",
+          originalUrl
+        ] })
+      ] }),
+      selected && /* @__PURE__ */ jsx2("button", { onClick: deleteNode2, className: "p-1 hover:bg-red-100 dark:hover:bg-red-900/50 rounded transition-colors", children: /* @__PURE__ */ jsx2(Trash2, { className: "w-4 h-4" }) })
+    ] }) });
+  }
+  if (embedType === "card") {
+    return /* @__PURE__ */ jsxs2(NodeViewWrapper, { className: "relative group", children: [
+      /* @__PURE__ */ jsx2(PreviewCard, { url: originalUrl, metadata }),
+      selected && /* @__PURE__ */ jsx2("div", { className: "absolute top-2 right-2 z-20 flex gap-2", children: /* @__PURE__ */ jsx2(
+        "button",
+        {
+          onClick: deleteNode2,
+          className: "p-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors",
+          title: "Delete embed",
+          children: /* @__PURE__ */ jsx2(Trash2, { className: "w-4 h-4" })
+        }
+      ) })
+    ] });
+  }
   let aspectRatioClass = "aspect-video";
   if (platform === "instagram") {
     aspectRatioClass = "aspect-square sm:aspect-[4/5]";
@@ -4217,30 +4269,38 @@ var EmbedWrapper = (props) => {
   } else if (platform === "reddit") {
     aspectRatioClass = "aspect-auto min-h-[500px]";
   }
-  return /* @__PURE__ */ jsx(
+  return /* @__PURE__ */ jsx2(
     NodeViewWrapper,
     {
       className: cn(
         "relative rounded-xl overflow-hidden my-6 border-2 transition-all duration-200 group",
         selected ? "border-blue-500 shadow-md ring-2 ring-blue-500/20" : "border-transparent"
       ),
-      children: /* @__PURE__ */ jsxs("div", { className: cn("w-full h-full relative bg-gray-100 dark:bg-gray-800", aspectRatioClass), children: [
-        /* @__PURE__ */ jsx(
+      children: /* @__PURE__ */ jsxs2("div", { className: cn("w-full h-full relative bg-gray-100 dark:bg-gray-800", aspectRatioClass), children: [
+        isIframeLoading && /* @__PURE__ */ jsxs2("div", { className: "absolute inset-0 flex flex-col items-center justify-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 animate-pulse", children: [
+          /* @__PURE__ */ jsx2(Loader2, { className: "w-8 h-8 text-blue-500 animate-spin mb-2" }),
+          /* @__PURE__ */ jsx2("span", { className: "text-sm text-gray-500 dark:text-gray-400 font-medium", children: "Loading iframe..." })
+        ] }),
+        src && /* @__PURE__ */ jsx2(
           "iframe",
           {
             src,
-            className: "absolute inset-0 w-full h-full border-0",
+            className: cn(
+              "absolute inset-0 w-full h-full border-0 transition-opacity duration-500",
+              isIframeLoading ? "opacity-0" : "opacity-100"
+            ),
             allowFullScreen: true,
+            onLoad: () => setIsIframeLoading(false),
             allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           }
         ),
-        selected && /* @__PURE__ */ jsx("div", { className: "absolute top-2 right-2 z-10 flex gap-2", children: /* @__PURE__ */ jsx(
+        selected && /* @__PURE__ */ jsx2("div", { className: "absolute top-2 right-2 z-20 flex gap-2", children: /* @__PURE__ */ jsx2(
           "button",
           {
             onClick: deleteNode2,
             className: "p-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition-colors",
             title: "Delete embed",
-            children: /* @__PURE__ */ jsx(Trash2, { className: "w-4 h-4" })
+            children: /* @__PURE__ */ jsx2(Trash2, { className: "w-4 h-4" })
           }
         ) })
       ] })
@@ -4248,9 +4308,115 @@ var EmbedWrapper = (props) => {
   );
 };
 
-// src/components/editor/extensions/VideoEmbed.tsx
-var VideoEmbed = Node3.create({
-  name: "videoEmbed",
+// src/services/EmbedResolver.ts
+var EmbedService = class {
+  constructor() {
+    this.resolvers = [];
+  }
+  registerResolver(resolver) {
+    this.resolvers.push(resolver);
+  }
+  async resolveUrl(urlString) {
+    try {
+      const url = new URL(urlString);
+      for (const resolver of this.resolvers) {
+        if (resolver.match(url)) {
+          return await resolver.resolve(url);
+        }
+      }
+      return {
+        platform: "generic",
+        type: "card",
+        metadata: {
+          title: url.hostname,
+          description: urlString
+        }
+      };
+    } catch (e) {
+      return {
+        platform: "error",
+        type: "error",
+        metadata: {
+          title: "Invalid URL"
+        }
+      };
+    }
+  }
+};
+var embedService = new EmbedService();
+embedService.registerResolver({
+  id: "youtube",
+  match: (url) => url.hostname.includes("youtube.com") || url.hostname.includes("youtu.be"),
+  resolve: async (url) => {
+    let videoId = "";
+    if (url.hostname.includes("youtu.be")) {
+      videoId = url.pathname.slice(1);
+    } else {
+      videoId = url.searchParams.get("v") || "";
+    }
+    return {
+      src: `https://www.youtube.com/embed/${videoId}`,
+      platform: "youtube",
+      type: "iframe"
+    };
+  }
+});
+embedService.registerResolver({
+  id: "vimeo",
+  match: (url) => url.hostname.includes("vimeo.com"),
+  resolve: async (url) => {
+    const segments = url.pathname.split("/").filter(Boolean);
+    const videoId = segments[segments.length - 1];
+    return {
+      src: `https://player.vimeo.com/video/${videoId}`,
+      platform: "vimeo",
+      type: "iframe"
+    };
+  }
+});
+embedService.registerResolver({
+  id: "instagram",
+  match: (url) => url.hostname.includes("instagram.com"),
+  resolve: async (url) => {
+    const match = url.pathname.match(/\/(p|reel)\/([a-zA-Z0-9_-]+)/);
+    const id = match ? match[2] : "";
+    return {
+      src: `https://www.instagram.com/p/${id}/embed`,
+      platform: "instagram",
+      type: "iframe"
+    };
+  }
+});
+embedService.registerResolver({
+  id: "twitter",
+  match: (url) => url.hostname.includes("twitter.com") || url.hostname.includes("x.com"),
+  resolve: async (url) => {
+    const match = url.pathname.match(/\/([a-zA-Z0-9_]+)\/status\/([0-9]+)/);
+    if (match) {
+      return {
+        src: `https://twitframe.com/show?url=https://twitter.com/${match[1]}/status/${match[2]}`,
+        platform: "twitter",
+        type: "iframe"
+      };
+    }
+    throw new Error("Invalid Twitter URL");
+  }
+});
+embedService.registerResolver({
+  id: "reddit",
+  match: (url) => url.hostname.includes("reddit.com"),
+  resolve: async (url) => {
+    return {
+      src: `https://www.redditmedia.com${url.pathname}?embed=true`,
+      platform: "reddit",
+      type: "iframe"
+    };
+  }
+});
+
+// src/components/editor/extensions/SmartEmbed.ts
+var SmartEmbed = Node3.create({
+  name: "smartEmbed",
   addOptions() {
     return {
       addPasteHandler: true
@@ -4260,30 +4426,31 @@ var VideoEmbed = Node3.create({
   atom: true,
   addAttributes() {
     return {
-      src: {
-        default: null
-      },
-      platform: {
-        default: "generic"
-      }
+      src: { default: null },
+      platform: { default: "generic" },
+      embedType: { default: "iframe" },
+      originalUrl: { default: null },
+      metadata: { default: null },
+      isLoading: { default: false }
+      // Useful for showing loading state while fetching async
     };
   },
   parseHTML() {
     return [
       {
-        tag: "div[data-video-embed]"
+        tag: "div[data-smart-embed]"
       }
     ];
   },
   renderHTML({ HTMLAttributes }) {
-    return ["div", { "data-video-embed": "" }, ["iframe", mergeAttributes(HTMLAttributes, { allowfullscreen: "true" })]];
+    return ["div", { "data-smart-embed": "" }, ["iframe", mergeAttributes(HTMLAttributes, { allowfullscreen: "true" })]];
   },
   addNodeView() {
     return ReactNodeViewRenderer(EmbedWrapper);
   },
   addCommands() {
     return {
-      setVideoEmbed: (options) => ({ commands }) => {
+      setSmartEmbed: (options) => ({ commands }) => {
         return commands.insertContent({
           type: this.name,
           attrs: options
@@ -4291,79 +4458,240 @@ var VideoEmbed = Node3.create({
       }
     };
   },
-  addPasteRules() {
-    if (!this.options.addPasteHandler) {
-      return [];
-    }
-    const rules = [
-      // YouTube
-      nodePasteRule({
-        find: /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://www.youtube.com/embed/${match[1]}`,
-            platform: "youtube"
-          };
-        }
-      }),
-      // Vimeo
-      nodePasteRule({
-        find: /(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?)/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://player.vimeo.com/video/${match[1]}`,
-            platform: "vimeo"
-          };
-        }
-      }),
-      // Instagram
-      nodePasteRule({
-        find: /(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://www.instagram.com/p/${match[1]}/embed`,
-            platform: "instagram"
-          };
-        }
-      }),
-      // Twitter/X
-      nodePasteRule({
-        find: /(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)\/([a-zA-Z0-9_]+)\/status\/([0-9]+)/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://twitframe.com/show?url=https://twitter.com/${match[1]}/status/${match[2]}`,
-            platform: "twitter"
-          };
-        }
-      }),
-      // Reddit
-      nodePasteRule({
-        find: /(?:https?:\/\/)?(?:www\.)?reddit\.com\/r\/([a-zA-Z0-9_]+)\/comments\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_]+)/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://www.redditmedia.com/r/${match[1]}/comments/${match[2]}/${match[3]}/?embed=true`,
-            platform: "reddit"
-          };
-        }
-      }),
-      // Facebook
-      nodePasteRule({
-        find: /((?:https?:\/\/)?(?:www\.)?facebook\.com\/(?:video\.php\?v=\d+|.*?\/videos\/\d+|watch\/?\?v=\d+))/g,
-        type: this.type,
-        getAttributes: (match) => {
-          return {
-            src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(match[1])}`,
-            platform: "facebook"
-          };
+  addProseMirrorPlugins() {
+    if (!this.options.addPasteHandler) return [];
+    return [
+      new Plugin11({
+        key: new PluginKey9("smartEmbedPaste"),
+        props: {
+          handlePaste: (view, event, slice) => {
+            if (!event.clipboardData) return false;
+            const text = event.clipboardData.getData("text/plain");
+            try {
+              new URL(text);
+            } catch (e) {
+              return false;
+            }
+            const { state, dispatch } = view;
+            const { tr } = state;
+            const pos = state.selection.from;
+            const node = this.type.create({
+              originalUrl: text,
+              isLoading: true
+            });
+            dispatch(tr.replaceSelectionWith(node));
+            embedService.resolveUrl(text).then((result) => {
+              view.state.doc.descendants((node2, pos2) => {
+                if (node2.type.name === this.name && node2.attrs.originalUrl === text && node2.attrs.isLoading) {
+                  const updateTr = view.state.tr.setNodeMarkup(pos2, void 0, __spreadProps(__spreadValues({}, node2.attrs), {
+                    src: result.src,
+                    platform: result.platform,
+                    embedType: result.type,
+                    metadata: result.metadata,
+                    isLoading: false
+                  }));
+                  view.dispatch(updateTr);
+                  return false;
+                }
+              });
+            });
+            return true;
+          }
         }
       })
     ];
-    return rules;
+  }
+});
+
+// src/components/editor/extensions/SlashCommand.ts
+import Suggestion from "@tiptap/suggestion";
+import { ReactRenderer } from "@tiptap/react";
+import tippy from "tippy.js";
+
+// src/components/editor/components/CommandPalette.tsx
+import { useState as useState2, useEffect, forwardRef, useImperativeHandle } from "react";
+import { Type, Video, Code, Heading1, Heading2, Heading3 } from "lucide-react";
+import { jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+var getSuggestionItems = ({ query }) => {
+  const items = [
+    {
+      title: "Text",
+      description: "Just start typing with plain text.",
+      icon: /* @__PURE__ */ jsx3(Type, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleNode("paragraph", "paragraph").run();
+      }
+    },
+    {
+      title: "Heading 1",
+      description: "Big section heading.",
+      icon: /* @__PURE__ */ jsx3(Heading1, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 1 }).run();
+      }
+    },
+    {
+      title: "Heading 2",
+      description: "Medium section heading.",
+      icon: /* @__PURE__ */ jsx3(Heading2, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 2 }).run();
+      }
+    },
+    {
+      title: "Heading 3",
+      description: "Small section heading.",
+      icon: /* @__PURE__ */ jsx3(Heading3, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).setNode("heading", { level: 3 }).run();
+      }
+    },
+    {
+      title: "Code Block",
+      description: "Capture a code snippet.",
+      icon: /* @__PURE__ */ jsx3(Code, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run();
+      }
+    },
+    {
+      title: "Embed Video",
+      description: "Embed from YouTube, Instagram, Twitter...",
+      icon: /* @__PURE__ */ jsx3(Video, { className: "w-4 h-4" }),
+      command: ({ editor, range }) => {
+        const url = window.prompt("Enter Video or Post URL");
+        if (url) {
+          editor.chain().focus().deleteRange(range).insertContent(url).run();
+        } else {
+          editor.chain().focus().deleteRange(range).run();
+        }
+      }
+    }
+  ];
+  return items.filter((item) => item.title.toLowerCase().startsWith(query.toLowerCase())).slice(0, 10);
+};
+var CommandPalette = forwardRef((props, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState2(0);
+  const selectItem = (index) => {
+    const item = props.items[index];
+    if (item) {
+      props.command(item);
+    }
+  };
+  const upHandler = () => {
+    setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
+  };
+  const downHandler = () => {
+    setSelectedIndex((selectedIndex + 1) % props.items.length);
+  };
+  const enterHandler = () => {
+    selectItem(selectedIndex);
+  };
+  useEffect(() => setSelectedIndex(0), [props.items]);
+  useImperativeHandle(ref, () => ({
+    onKeyDown: ({ event }) => {
+      if (event.key === "ArrowUp") {
+        upHandler();
+        return true;
+      }
+      if (event.key === "ArrowDown") {
+        downHandler();
+        return true;
+      }
+      if (event.key === "Enter") {
+        enterHandler();
+        return true;
+      }
+      return false;
+    }
+  }));
+  if (!props.items.length) {
+    return null;
+  }
+  return /* @__PURE__ */ jsx3("div", { className: "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl rounded-xl overflow-hidden min-w-[280px] p-2 flex flex-col gap-1", children: props.items.map((item, index) => /* @__PURE__ */ jsxs3(
+    "button",
+    {
+      className: `flex items-center gap-3 p-2 rounded-lg text-left transition-colors w-full ${index === selectedIndex ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"}`,
+      onClick: () => selectItem(index),
+      children: [
+        /* @__PURE__ */ jsx3("div", { className: `p-2 rounded-md ${index === selectedIndex ? "bg-white dark:bg-gray-800 shadow-sm" : "bg-gray-100 dark:bg-gray-800"}`, children: item.icon }),
+        /* @__PURE__ */ jsxs3("div", { children: [
+          /* @__PURE__ */ jsx3("div", { className: "font-medium text-sm", children: item.title }),
+          /* @__PURE__ */ jsx3("div", { className: `text-xs ${index === selectedIndex ? "text-blue-500/70 dark:text-blue-400/70" : "text-gray-500"}`, children: item.description })
+        ] })
+      ]
+    },
+    index
+  )) });
+});
+CommandPalette.displayName = "CommandPalette";
+
+// src/components/editor/extensions/SlashCommand.ts
+var SlashCommand = Extension.create({
+  name: "slashCommand",
+  addOptions() {
+    return {
+      suggestion: {
+        char: "/",
+        command: ({ editor, range, props }) => {
+          props.command({ editor, range });
+        }
+      }
+    };
+  },
+  addProseMirrorPlugins() {
+    return [
+      Suggestion(__spreadProps(__spreadValues({
+        editor: this.editor
+      }, this.options.suggestion), {
+        items: getSuggestionItems,
+        render: () => {
+          let component;
+          let popup;
+          return {
+            onStart: (props) => {
+              component = new ReactRenderer(CommandPalette, {
+                props,
+                editor: props.editor
+              });
+              if (!props.clientRect) {
+                return;
+              }
+              popup = tippy("body", {
+                getReferenceClientRect: props.clientRect,
+                appendTo: () => document.body,
+                content: component.element,
+                showOnCreate: true,
+                interactive: true,
+                trigger: "manual",
+                placement: "bottom-start"
+              });
+            },
+            onUpdate(props) {
+              component.updateProps(props);
+              if (!props.clientRect) {
+                return;
+              }
+              popup[0].setProps({
+                getReferenceClientRect: props.clientRect
+              });
+            },
+            onKeyDown(props) {
+              var _a;
+              if (props.event.key === "Escape") {
+                popup[0].hide();
+                return true;
+              }
+              return (_a = component.ref) == null ? void 0 : _a.onKeyDown(props);
+            },
+            onExit() {
+              popup[0].destroy();
+              component.destroy();
+            }
+          };
+        }
+      }))
+    ];
   }
 });
 
@@ -4394,123 +4722,291 @@ var defaultExtensions = [
       class: "rounded-lg max-w-full h-auto shadow-md border border-gray-200 dark:border-gray-800"
     }
   }),
-  CharacterCount.configure({ limit: 350 }),
-  VideoEmbed
+  CharacterCount.configure({ limit: 300 }),
+  SmartEmbed,
+  SlashCommand
 ];
 
 // src/components/editor/TappyEditor.tsx
-import { useEffect, useState } from "react";
-import { jsx as jsx2, jsxs as jsxs2 } from "react/jsx-runtime";
-var TappyEditor = ({
-  value = "",
-  onChange,
-  className,
-  readOnly = false
-}) => {
-  const editor = useEditor({
-    extensions: defaultExtensions,
-    content: value,
-    editable: !readOnly,
-    immediatelyRender: false,
-    onUpdate: ({ editor: editor2 }) => {
-      var _a;
-      onChange == null ? void 0 : onChange(editor2.getHTML());
-      setCharacterCount(((_a = editor2.storage.characterCount) == null ? void 0 : _a.characters()) || 0);
-    },
-    editorProps: {
-      attributes: {
-        class: cn("focus:outline-none min-h-[150px] cursor-text pb-8")
-      }
-    }
-  });
-  const [characterCount, setCharacterCount] = useState(0);
-  useEffect(() => {
-    var _a;
-    if (editor) {
-      setCharacterCount(((_a = editor.storage.characterCount) == null ? void 0 : _a.characters()) || 0);
-    }
-  }, [editor, value]);
-  useEffect(() => {
-    if (editor && value && value !== editor.getHTML()) {
-      editor.commands.setContent(value, { emitUpdate: false });
-    }
-  }, [value, editor]);
-  const characterLimit = 350;
-  const percentage = Math.min(100, Math.round(characterCount / characterLimit * 100));
-  const radius = 10;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - percentage / 100 * circumference;
-  let indicatorColor = "text-green-500";
-  if (characterCount >= 101 && characterCount <= 240) {
-    indicatorColor = "text-gray-500 dark:text-gray-400";
-  } else if (characterCount >= 241 && characterCount <= 310) {
-    indicatorColor = "text-yellow-500";
-  } else if (characterCount >= 311) {
-    indicatorColor = "text-red-500";
+import {
+  useEffect as useEffect3,
+  useState as useState4,
+  forwardRef as forwardRef2,
+  useImperativeHandle as useImperativeHandle2,
+  useRef
+} from "react";
+
+// src/hooks/useTappyPlugins.ts
+import { useEffect as useEffect2, useState as useState3 } from "react";
+
+// src/plugins/PluginManager.ts
+var PluginManager = class {
+  constructor() {
+    this.plugins = /* @__PURE__ */ new Map();
   }
-  return /* @__PURE__ */ jsx2(
-    "div",
-    {
-      className: cn(
-        "w-full bg-white/20 dark:bg-black/20 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300",
-        "focus-within:ring-2 focus-within:ring-white/40 dark:focus-within:ring-white/40 focus-within:border-white/40 dark:focus-within:border-white/40 focus-within:shadow-md",
-        className
-      ),
-      children: /* @__PURE__ */ jsxs2(
-        "div",
-        {
-          className: "flex-grow p-4 sm:p-6 text-base leading-relaxed text-gray-900 dark:text-gray-100 relative",
-          onClick: () => {
-            if (!(editor == null ? void 0 : editor.isFocused)) {
-              editor == null ? void 0 : editor.commands.focus("end");
-            }
-          },
-          children: [
-            /* @__PURE__ */ jsx2(EditorContent, { editor, className: "h-full" }),
-            /* @__PURE__ */ jsxs2("div", { className: "absolute bottom-4 right-4 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 font-medium bg-white/30 dark:bg-black/30 backdrop-blur-md px-2 py-1 rounded-full border border-white/20 dark:border-white/10 shadow-sm", children: [
-              /* @__PURE__ */ jsxs2("span", { children: [
-                characterCount,
-                " / ",
-                characterLimit
-              ] }),
-              /* @__PURE__ */ jsxs2("svg", { width: "24", height: "24", viewBox: "0 0 24 24", className: "-rotate-90", children: [
-                /* @__PURE__ */ jsx2(
-                  "circle",
+  /**
+   * Register a new plugin
+   * @param plugin The plugin to register
+   */
+  registerPlugin(plugin) {
+    if (this.plugins.has(plugin.name)) {
+      console.warn(`[Tappy Plugin Manager] Plugin with name "${plugin.name}" is already registered. Overwriting.`);
+    }
+    this.plugins.set(plugin.name, plugin);
+    if (plugin.onLoad) {
+      plugin.onLoad();
+    }
+  }
+  /**
+   * Unregister an existing plugin
+   * @param name The name of the plugin to remove
+   */
+  unregisterPlugin(name) {
+    if (this.plugins.has(name)) {
+      this.plugins.delete(name);
+    }
+  }
+  /**
+   * Get all registered plugins
+   * @returns Array of TappyPlugin
+   */
+  getPlugins() {
+    return Array.from(this.plugins.values());
+  }
+  /**
+   * Get all TipTap extensions from registered plugins
+   * @returns Array of TipTap Extensions
+   */
+  getTipTapExtensions() {
+    return this.getPlugins().filter((plugin) => plugin.tiptapExtension !== void 0).map((plugin) => plugin.tiptapExtension);
+  }
+};
+var pluginManager = new PluginManager();
+
+// src/hooks/useTappyPlugins.ts
+function useTappyPlugins() {
+  const [plugins, setPlugins] = useState3([]);
+  const [extensions, setExtensions] = useState3([]);
+  useEffect2(() => {
+    setPlugins(pluginManager.getPlugins());
+    setExtensions(pluginManager.getTipTapExtensions());
+  }, []);
+  return {
+    plugins,
+    extensions
+  };
+}
+
+// src/components/editor/TappyEditor.tsx
+import { jsx as jsx4, jsxs as jsxs4 } from "react/jsx-runtime";
+var TappyEditor = forwardRef2(
+  ({ value = "", onChange, className, readOnly = false }, ref) => {
+    const { extensions: pluginExtensions } = useTappyPlugins();
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+    const editor = useEditor({
+      extensions: [...defaultExtensions, ...pluginExtensions],
+      content: value,
+      editable: !readOnly,
+      immediatelyRender: false,
+      onUpdate: ({ editor: editor2 }) => {
+        var _a;
+        if (onChangeRef.current) {
+          onChangeRef.current(editor2.getHTML());
+        }
+        setCharacterCount(((_a = editor2.storage.characterCount) == null ? void 0 : _a.characters()) || 0);
+      },
+      editorProps: {
+        attributes: {
+          class: cn("focus:outline-none min-h-[150px] cursor-text pb-8")
+        }
+      }
+    });
+    const [characterCount, setCharacterCount] = useState4(0);
+    useImperativeHandle2(ref, () => ({
+      getEditor: () => editor
+    }));
+    useEffect3(() => {
+      var _a;
+      if (editor) {
+        setCharacterCount(((_a = editor.storage.characterCount) == null ? void 0 : _a.characters()) || 0);
+      }
+    }, [editor, value]);
+    useEffect3(() => {
+      if (editor && value && value !== editor.getHTML()) {
+        editor.commands.setContent(value, { emitUpdate: false });
+      }
+    }, [value, editor]);
+    const characterLimit = 300;
+    const percentage = Math.min(
+      100,
+      Math.round(characterCount / characterLimit * 100)
+    );
+    const radius = 10;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - percentage / 100 * circumference;
+    let indicatorColor = "text-green-500";
+    if (characterCount >= 101 && characterCount <= 200) {
+      indicatorColor = "text-gray-500 dark:text-gray-400";
+    } else if (characterCount >= 201 && characterCount <= 260) {
+      indicatorColor = "text-yellow-500";
+    } else if (characterCount >= 261) {
+      indicatorColor = "text-red-500";
+    }
+    return /* @__PURE__ */ jsx4(
+      "div",
+      {
+        className: cn(
+          "w-full bg-white/20 dark:bg-black/20 backdrop-blur-2xl border border-white/20 dark:border-white/10 rounded-2xl shadow-lg overflow-hidden flex flex-col transition-all duration-300",
+          "focus-within:ring-2 focus-within:ring-white/40 dark:focus-within:ring-white/40 focus-within:border-white/40 dark:focus-within:border-white/40 focus-within:shadow-md",
+          className
+        ),
+        children: /* @__PURE__ */ jsxs4(
+          "div",
+          {
+            className: "flex-grow p-4 sm:p-6 text-base leading-relaxed text-gray-900 dark:text-gray-100 relative",
+            onClick: () => {
+              if (!(editor == null ? void 0 : editor.isFocused)) {
+                editor == null ? void 0 : editor.commands.focus("end");
+              }
+            },
+            children: [
+              /* @__PURE__ */ jsx4(EditorContent, { editor, className: "h-full" }),
+              /* @__PURE__ */ jsxs4("div", { className: "absolute bottom-4 right-4 flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 font-medium bg-white/30 dark:bg-black/30 backdrop-blur-md px-2 py-1 rounded-full border border-white/20 dark:border-white/10 shadow-sm", children: [
+                /* @__PURE__ */ jsxs4("span", { children: [
+                  characterCount,
+                  " / ",
+                  characterLimit
+                ] }),
+                /* @__PURE__ */ jsxs4(
+                  "svg",
                   {
-                    className: "text-gray-200 dark:text-gray-800",
-                    strokeWidth: "3",
-                    stroke: "currentColor",
-                    fill: "transparent",
-                    r: radius,
-                    cx: "12",
-                    cy: "12"
-                  }
-                ),
-                /* @__PURE__ */ jsx2(
-                  "circle",
-                  {
-                    className: cn("transition-all duration-300 ease-in-out", indicatorColor),
-                    strokeWidth: "3",
-                    strokeDasharray: circumference,
-                    strokeDashoffset,
-                    strokeLinecap: "round",
-                    stroke: "currentColor",
-                    fill: "transparent",
-                    r: radius,
-                    cx: "12",
-                    cy: "12"
+                    width: "24",
+                    height: "24",
+                    viewBox: "0 0 24 24",
+                    className: "-rotate-90",
+                    children: [
+                      /* @__PURE__ */ jsx4(
+                        "circle",
+                        {
+                          className: "text-gray-200 dark:text-gray-800",
+                          strokeWidth: "3",
+                          stroke: "currentColor",
+                          fill: "transparent",
+                          r: radius,
+                          cx: "12",
+                          cy: "12"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx4(
+                        "circle",
+                        {
+                          className: cn(
+                            "transition-all duration-300 ease-in-out",
+                            indicatorColor
+                          ),
+                          strokeWidth: "3",
+                          strokeDasharray: circumference,
+                          strokeDashoffset,
+                          strokeLinecap: "round",
+                          stroke: "currentColor",
+                          fill: "transparent",
+                          r: radius,
+                          cx: "12",
+                          cy: "12"
+                        }
+                      )
+                    ]
                   }
                 )
               ] })
-            ] })
-          ]
-        }
-      )
+            ]
+          }
+        )
+      }
+    );
+  }
+);
+TappyEditor.displayName = "TappyEditor";
+
+// src/hooks/usePersistence.ts
+import { useCallback } from "react";
+function usePersistence({ editor, key = "tappy-editor-content" }) {
+  const saveContent = useCallback(() => {
+    if (!editor) return null;
+    const json = editor.getJSON();
+    if (key) {
+      try {
+        localStorage.setItem(key, JSON.stringify(json));
+      } catch (e) {
+        console.warn("Failed to save to localStorage", e);
+      }
     }
-  );
-};
+    return json;
+  }, [editor, key]);
+  const loadContent = useCallback((data) => {
+    if (!editor) return false;
+    let contentToLoad = data;
+    if (!contentToLoad && key) {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          contentToLoad = JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn("Failed to load from localStorage", e);
+      }
+    }
+    if (contentToLoad) {
+      editor.commands.setContent(contentToLoad, { emitUpdate: false });
+      return true;
+    }
+    return false;
+  }, [editor, key]);
+  const exportHTML = useCallback(() => {
+    if (!editor) return "";
+    return editor.getHTML();
+  }, [editor]);
+  return {
+    saveContent,
+    loadContent,
+    exportHTML
+  };
+}
+
+// src/hooks/useCollaboration.ts
+import { useMemo } from "react";
+import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+function useCollaboration({ docId, provider, user }) {
+  const extensions = useMemo(() => {
+    if (!provider) return [];
+    const exts = [
+      Collaboration.configure({
+        document: provider.doc
+      })
+    ];
+    if (user) {
+      exts.push(
+        CollaborationCursor.configure({
+          provider,
+          user
+        })
+      );
+    }
+    return exts;
+  }, [provider, user, docId]);
+  return {
+    extensions
+  };
+}
 export {
   TappyEditor,
-  defaultExtensions
+  defaultExtensions,
+  embedService,
+  pluginManager,
+  useCollaboration,
+  usePersistence,
+  useTappyPlugins
 };
 //# sourceMappingURL=index.mjs.map
